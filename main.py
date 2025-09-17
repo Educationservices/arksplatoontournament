@@ -81,6 +81,7 @@ def health():
     return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
 
 @app.route('/submit-registration', methods=['POST'])
+@cross_origin()
 def submit_registration():
     """Handle tournament registration submission"""
     try:
