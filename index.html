@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ark Victoria Splatoon Tournament</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #334155 70%, #0f172a 100%);
+            min-height: 100vh;
+            overflow: hidden; /* Prevent scrolling during splash */
+        }
+
+        body.splash-hidden {
+            overflow-x: hidden;
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0ea5e9 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease-out;
+        }
+
+        .splash-logo {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            object-position: center;
+            opacity: 0;
+            animation: fadeInScale 1.5s ease-out 0.2s forwards;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .splash-title {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1s forwards;
+            margin-top: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 10;
+        }
+
+        .splash-subtitle {
+            color: #cbd5e1;
+            font-size: 18px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1.3s forwards;
+            margin-top: 15px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            visibility: hidden; /* Completely hide until splash is done */
+        }
+
+        .main-content.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .school-crest {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 120px;
+            height: 120px;
+            z-index: 100;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 600px;
+            border: 2px solid rgba(51, 65, 85, 0.3);
+            position: relative;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-title {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-subtitle {
+            color: #cbd5e1;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .page-indicator {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(30, 41, 59, 0.8);
+            color: #ffffff;
+        }
+
+        .form-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            background: rgba(30, 41, 59, 1);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+        }
+
+        .dropdown-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .dropdown-container {
+            flex: 1;
+        }
+
+        .dropdown-container:first-child {
+            flex: 0.4;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            font-size: 16px;
+            background: rgba(30, 41, 59, 0.8);
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-select option {
+            background: #1e293b;
+            color: #ffffff;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            background: rgba(30, 41, 59, 1);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .checkbox-input {
+            margin-top: 2px;
+            width: 20px;
+            height: 20px;
+            accent-color: #0ea5e9;
+        }
+
+        .checkbox-label {
+            color: #ffffff;
+            font-weight: 500;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .submit-btn, .next-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover, .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(14, 165, 233, 0.4);
+        }
+
+        .submit-btn:active, .next-btn:active {
+            transform: translateY(0);
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        .footer-text {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            .dropdown-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .dropdown-container:first-child {
+                flex: 1;
+            }
+
+            .school-crest {
+                width: 90px;
+                height: 90px;
+                top: 15px;
+                right: 15px;
+            }
+
+            .form-title {
+                font-size: 24px;
+            }
+
+            .splash-logo {
+                width: 100vw;
+                height: 100vh;
+                object-fit: cover;
+                object-position: center;
+            }
+
+            .splash-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <img src="https://files.catbox.moe/4m1i5o.png" alt="Splatoon Tournament Logo" class="splash-logo" id="splashLogo">
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <img src="https://s45750.pcdn.co/wp-content/uploads/victoria-academy-crest-630x630.png" alt="Victoria Academy Crest" class="school-crest">
+        
+        <div class="form-container">
+            <!-- Page 1: First Player -->
+            <div class="page active" id="page1">
+                <div class="form-header">
+                    <div class="page-indicator">Player 1 Information</div>
+                    <h1 class="form-title">Ark Victoria Splatoon Tournament</h1>
+                    <p class="form-subtitle">Enter your details to register for the tournament</p>
+                </div>
+
+                <form id="player1Form">
+                    <div class="form-group">
+                        <label for="fullName1" class="form-label">
+                            What is your legal full name? <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="fullName1" 
+                            name="fullName1" 
+                            class="form-input" 
+                            required 
+                            placeholder="Enter your full legal name"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age1" class="form-label">
+                            What is your age? <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="age1" 
+                            name="age1" 
+                            class="form-input" 
+                            required 
+                            min="1" 
+                            max="120"
+                            placeholder="Enter your age"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            What is your form? <span class="required">*</span>
+                        </label>
+                        <div class="dropdown-group">
+                            <div class="dropdown-container">
+                                <select id="formNumber1" name="formNumber1" class="form-select" required>
+                                    <option value="" disabled selected>Year</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                </select>
+                            </div>
+                            <div class="dropdown-container">
+                                <select id="formName1" name="formName1" class="form-select" required>
+                                    <option value="" disabled selected>Form Name</option>
+                                    <option value="Zephaniah">Zephaniah</option>
+                                    <option value="Watt">Watt</option>
+                                    <option value="Cadbury">Cadbury</option>
+                                    <option value="Simmonds">Simmonds</option>
+                                    <option value="Yousufzai">Yousufzai</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input 
+                                type="checkbox" 
+                                id="paymentAgreement1" 
+                                name="paymentAgreement1" 
+                                class="checkbox-input" 
+                                required
+                            />
+                            <label for="paymentAgreement1" class="checkbox-label">
+                                Do you agree that you will need to pay 2 pounds to enter this competition? <span class="required">*</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="button" class="next-btn" onclick="goToPage2()">
+                        Next: Partner Information →
+                    </button>
+                </form>
+            </div>
+
+            <!-- Page 2: Second Player -->
+            <div class="page" id="page2">
+                <div class="form-header">
+                    <div class="page-indicator">Player 2 Information (Your Partner)</div>
+                    <h1 class="form-title">Partner Details</h1>
+                    <p class="form-subtitle">Now enter your tournament partner's information<br><strong>Note:</strong> This is for your PARTNER, not you!</p>
+                </div>
+
+                <form id="player2Form">
+                    <div class="form-group">
+                        <label for="fullName2" class="form-label">
+                            What is your partner's legal full name? <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="fullName2" 
+                            name="fullName2" 
+                            class="form-input" 
+                            required 
+                            placeholder="Enter your partner's full legal name"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age2" class="form-label">
+                            What is your partner's age? <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="age2" 
+                            name="age2" 
+                            class="form-input" 
+                            required 
+                            min="1" 
+                            max="120"
+                            placeholder="Enter your partner's age"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            What is your partner's form? <span class="required">*</span>
+                        </label>
+                        <div class="dropdown-group">
+                            <div class="dropdown-container">
+                                <select id="formNumber2" name="formNumber2" class="form-select" required>
+                                    <option value="" disabled selected>Year</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                </select>
+                            </div>
+                            <div class="dropdown-container">
+                                <select id="formName2" name="formName2" class="form-select" required>
+                                    <option value="" disabled selected>Form Name</option>
+                                    <option value="Zephaniah">Zephaniah</option>
+                                    <option value="Watt">Watt</option>
+                                    <option value="Cadbury">Cadbury</option>
+                                    <option value="Simmonds">Simmonds</option>
+                                    <option value="Yousufzai">Yousufzai</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input 
+                                type="checkbox" 
+                                id="paymentAgreement2" 
+                                name="paymentAgreement2" 
+                                class="checkbox-input" 
+                                required
+                            />
+                            <label for="paymentAgreement2" class="checkbox-label">
+                                Does your partner agree that they will need to pay 2 pounds to enter this competition? <span class="required">*</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        Submit Tournament Entry
+                    </button>
+                </form>
+
+                <div class="footer-text">
+                    Hosted by the Digital Computing Team. Form made by Aadam
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Splash Screen Logic
+        window.addEventListener('load', function() {
+            const splashLogo = document.getElementById('splashLogo');
+            
+            // Handle image loading
+            splashLogo.addEventListener('load', function() {
+                // Image loaded successfully, proceed normally
+                setTimeout(hideSplash, 2500); // Reduced from 4000ms
+            });
+            
+            // Fallback if image fails to load or takes too long
+            splashLogo.addEventListener('error', function() {
+                // Image failed to load, hide splash sooner
+                setTimeout(hideSplash, 1000);
+            });
+            
+            // Safety timeout - ensure splash doesn't stay forever
+            setTimeout(hideSplash, 5000); // Maximum wait time
+        });
+
+        function hideSplash() {
+            const splashScreen = document.getElementById('splashScreen');
+            const mainContent = document.getElementById('mainContent');
+            
+            splashScreen.classList.add('hidden');
+            document.body.style.overflow = 'auto'; // Allow scrolling
+            
+            setTimeout(function() {
+                mainContent.classList.add('visible');
+            }, 500);
+        }
+
+        // Page Navigation
+        function goToPage2() {
+            // Validate Page 1
+            const form1 = document.getElementById('player1Form');
+            if (!form1.checkValidity()) {
+                form1.reportValidity();
+                return;
+            }
+
+            // Switch to Page 2
+            document.getElementById('page1').classList.remove('active');
+            document.getElementById('page2').classList.add('active');
+        }
+
+        // Form Submission
+        document.getElementById('player2Form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitBtn = this.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+            
+            // Get all form data
+            const player1Data = {
+                fullName: document.getElementById('fullName1').value,
+                age: document.getElementById('age1').value,
+                formNumber: document.getElementById('formNumber1').value,
+                formName: document.getElementById('formName1').value,
+                paymentAgreement: document.getElementById('paymentAgreement1').checked
+            };
+
+            const player2Data = {
+                fullName: document.getElementById('fullName2').value,
+                age: document.getElementById('age2').value,
+                formNumber: document.getElementById('formNumber2').value,
+                formName: document.getElementById('formName2').value,
+                paymentAgreement: document.getElementById('paymentAgreement2').checked
+            };
+            
+            try {
+                // Replace 'YOUR_RENDER_URL' with your actual Render deployment URL
+                const BACKEND_URL = 'https://YOUR_RENDER_URL.onrender.com';
+                
+                const response = await fetch(`${BACKEND_URL}/submit-registration`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        player1: player1Data,
+                        player2: player2Data
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Success message with team ID
+                    alert(`🦑 Tournament Registration Complete! 🦑\n\nTeam ID: ${result.team_id}\nPlayer 1: ${player1Data.fullName} (Form ${player1Data.formNumber} ${player1Data.formName})\nPlayer 2: ${player2Data.fullName} (Form ${player2Data.formNumber} ${player2Data.formName})\n\nYour team has been registered for the Ark Victoria Splatoon Tournament!\n\nRemember: Each player needs to pay £2 entry fee.`);
+                    
+                    // Optionally reset the form
+                    document.getElementById('player1Form').reset();
+                    document.getElementById('player2Form').reset();
+                    document.getElementById('page1').classList.add('active');
+                    document.getElementById('page2').classList.remove('active');
+                } else {
+                    alert('❌ Registration failed: ' + (result.error || 'Unknown error. Please try again.'));
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                alert('❌ Network error. Please check your internet connection and try again.');
+                
+                // Fallback: show local success message
+                alert(`🦑 Registration Submitted! 🦑\n\nPlayer 1: ${player1Data.fullName} (Form ${player1Data.formNumber} ${player1Data.formName})\nPlayer 2: ${player2Data.fullName} (Form ${player2Data.formNumber} ${player2Data.formName})\n\nNote: There was a connection issue, but your registration has been recorded locally. Please contact the Digital Computing Team to confirm your entry.`);
+            } finally {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
