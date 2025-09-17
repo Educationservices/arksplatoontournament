@@ -65,12 +65,15 @@ def require_teacher_auth(f):
 @app.route('/')
 def home():
     """Serve the tournament form"""
-    return """
-    <h1>Splatoon Tournament Backend</h1>
-    <p>Backend is running! Your form should submit to /submit-registration</p>
-    <p>Make sure to update your frontend to point to this backend.</p>
-    <p><a href="/teacher">Teacher Dashboard</a></p>
-    """
+    try:
+        with open('index.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        return """
+        <h1>Error: index.html not found</h1>
+        <p>Make sure index.html is in the same folder as this Python file.</p>
+        <p><a href="/teacher">Teacher Dashboard</a></p>
+        """
 
 @app.route('/health')
 def health():
@@ -173,76 +176,231 @@ def teacher_dashboard():
         <head>
             <title>Teacher Dashboard - Tournament Registrations</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                th { background-color: #f2f2f2; }
-                tr:nth-child(even) { background-color: #f9f9f9; }
-                .payment-yes { background-color: #d4edda; color: #155724; }
-                .payment-no { background-color: #f8d7da; color: #721c24; }
-                .update-btn { padding: 5px 10px; margin: 2px; cursor: pointer; }
-                .btn-yes { background-color: #28a745; color: white; border: none; }
-                .btn-no { background-color: #dc3545; color: white; border: none; }
-                .logout-btn { float: right; padding: 10px 15px; background-color: #6c757d; color: white; text-decoration: none; }
-                h1 { color: #333; }
-                .stats { margin: 20px 0; padding: 15px; background-color: #e9ecef; border-radius: 5px; }
+                body { 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    margin: 0; 
+                    padding: 20px; 
+                    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                    min-height: 100vh;
+                    color: white;
+                }
+                .container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    background: rgba(255, 255, 255, 0.95);
+                    border-radius: 15px;
+                    padding: 30px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                    color: #1e3c72;
+                }
+                table { 
+                    border-collapse: collapse; 
+                    width: 100%; 
+                    margin-top: 20px; 
+                    background: white;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                }
+                th, td { 
+                    border: 1px solid #e3f2fd; 
+                    padding: 12px; 
+                    text-align: left; 
+                }
+                th { 
+                    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                    color: white;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    font-size: 12px;
+                    letter-spacing: 1px;
+                }
+                tr:nth-child(even) { background-color: #f8fbff; }
+                tr:hover { background-color: #e3f2fd; transition: background-color 0.3s; }
+                .payment-yes { 
+                    background-color: #c8e6c9; 
+                    color: #2e7d32; 
+                    font-weight: bold;
+                    text-align: center;
+                    border-radius: 5px;
+                    padding: 5px;
+                }
+                .payment-no { 
+                    background-color: #ffcdd2; 
+                    color: #c62828; 
+                    font-weight: bold;
+                    text-align: center;
+                    border-radius: 5px;
+                    padding: 5px;
+                }
+                .update-btn { 
+                    padding: 6px 12px; 
+                    margin: 2px; 
+                    cursor: pointer; 
+                    border: none;
+                    border-radius: 5px;
+                    font-size: 11px;
+                    font-weight: bold;
+                    transition: all 0.3s ease;
+                }
+                .btn-yes { 
+                    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); 
+                    color: white; 
+                }
+                .btn-yes:hover { 
+                    background: linear-gradient(135deg, #388e3c 0%, #4caf50 100%);
+                    transform: translateY(-1px);
+                }
+                .btn-no { 
+                    background: linear-gradient(135deg, #f44336 0%, #e57373 100%); 
+                    color: white; 
+                }
+                .btn-no:hover { 
+                    background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+                    transform: translateY(-1px);
+                }
+                .logout-btn { 
+                    float: right; 
+                    padding: 12px 20px; 
+                    background: linear-gradient(135deg, #37474f 0%, #546e7a 100%); 
+                    color: white; 
+                    text-decoration: none; 
+                    border-radius: 25px;
+                    font-weight: bold;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                }
+                .logout-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+                }
+                h1 { 
+                    color: #1e3c72; 
+                    text-align: center;
+                    font-size: 2.5rem;
+                    margin-bottom: 10px;
+                    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+                }
+                .stats { 
+                    margin: 20px 0; 
+                    padding: 20px; 
+                    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
+                    border-radius: 10px; 
+                    color: white;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 15px;
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                }
+                .stat-item {
+                    text-align: center;
+                    padding: 10px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+                .stat-number {
+                    font-size: 2rem;
+                    font-weight: bold;
+                    display: block;
+                    color: #ffd54f;
+                }
+                .stat-label {
+                    font-size: 0.9rem;
+                    opacity: 0.9;
+                }
+                .header-section {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    flex-wrap: wrap;
+                }
+                .team-id {
+                    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 15px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
             </style>
         </head>
         <body>
-            <a href="/teacher/logout" class="logout-btn">Logout</a>
-            <h1>Tournament Registrations Dashboard</h1>
-            
-            <div class="stats">
-                <strong>Total Registrations:</strong> {{ total_count }}<br>
-                <strong>Teams with Full Payment:</strong> {{ full_payment_count }}<br>
-                <strong>Teams with Partial Payment:</strong> {{ partial_payment_count }}<br>
-                <strong>Teams with No Payment:</strong> {{ no_payment_count }}
+            <div class="container">
+                <div class="header-section">
+                    <h1>🎮 Tournament Dashboard</h1>
+                    <a href="/teacher/logout" class="logout-btn">Logout</a>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ total_count }}</span>
+                        <span class="stat-label">Total Teams</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">{{ full_payment_count }}</span>
+                        <span class="stat-label">Full Payment</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">{{ partial_payment_count }}</span>
+                        <span class="stat-label">Partial Payment</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">{{ no_payment_count }}</span>
+                        <span class="stat-label">No Payment</span>
+                    </div>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Team ID</th>
+                            <th>Timestamp</th>
+                            <th>Player 1</th>
+                            <th>Age</th>
+                            <th>Form</th>
+                            <th>P1 Payment</th>
+                            <th>Player 2</th>
+                            <th>Age</th>
+                            <th>Form</th>
+                            <th>P2 Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td><span class="team-id">{{ record['Team ID'] }}</span></td>
+                            <td>{{ record['Timestamp'] }}</td>
+                            <td><strong>{{ record['Player 1 Name'] }}</strong></td>
+                            <td>{{ record['Player 1 Age'] }}</td>
+                            <td>{{ record['Player 1 Form'] }}</td>
+                            <td>
+                                <span class="{% if record['Player 1 Payment Agreement'] == 'Yes' %}payment-yes{% else %}payment-no{% endif %}">
+                                    {{ record['Player 1 Payment Agreement'] }}
+                                </span>
+                            </td>
+                            <td><strong>{{ record['Player 2 Name'] }}</strong></td>
+                            <td>{{ record['Player 2 Age'] }}</td>
+                            <td>{{ record['Player 2 Form'] }}</td>
+                            <td>
+                                <span class="{% if record['Player 2 Payment Agreement'] == 'Yes' %}payment-yes{% else %}payment-no{% endif %}">
+                                    {{ record['Player 2 Payment Agreement'] }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="update-btn btn-yes" onclick="updatePayment('{{ record['Team ID'] }}', 'player1', 'Yes')">P1: ✓</button>
+                                <button class="update-btn btn-no" onclick="updatePayment('{{ record['Team ID'] }}', 'player1', 'No')">P1: ✗</button>
+                                <br>
+                                <button class="update-btn btn-yes" onclick="updatePayment('{{ record['Team ID'] }}', 'player2', 'Yes')">P2: ✓</button>
+                                <button class="update-btn btn-no" onclick="updatePayment('{{ record['Team ID'] }}', 'player2', 'No')">P2: ✗</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Team ID</th>
-                        <th>Timestamp</th>
-                        <th>Player 1</th>
-                        <th>Age</th>
-                        <th>Form</th>
-                        <th>P1 Payment</th>
-                        <th>Player 2</th>
-                        <th>Age</th>
-                        <th>Form</th>
-                        <th>P2 Payment</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in records %}
-                    <tr>
-                        <td><strong>{{ record['Team ID'] }}</strong></td>
-                        <td>{{ record['Timestamp'] }}</td>
-                        <td>{{ record['Player 1 Name'] }}</td>
-                        <td>{{ record['Player 1 Age'] }}</td>
-                        <td>{{ record['Player 1 Form'] }}</td>
-                        <td class="{% if record['Player 1 Payment Agreement'] == 'Yes' %}payment-yes{% else %}payment-no{% endif %}">
-                            {{ record['Player 1 Payment Agreement'] }}
-                        </td>
-                        <td>{{ record['Player 2 Name'] }}</td>
-                        <td>{{ record['Player 2 Age'] }}</td>
-                        <td>{{ record['Player 2 Form'] }}</td>
-                        <td class="{% if record['Player 2 Payment Agreement'] == 'Yes' %}payment-yes{% else %}payment-no{% endif %}">
-                            {{ record['Player 2 Payment Agreement'] }}
-                        </td>
-                        <td>
-                            <button class="update-btn btn-yes" onclick="updatePayment('{{ record['Team ID'] }}', 'player1', 'Yes')">P1: Yes</button>
-                            <button class="update-btn btn-no" onclick="updatePayment('{{ record['Team ID'] }}', 'player1', 'No')">P1: No</button>
-                            <br>
-                            <button class="update-btn btn-yes" onclick="updatePayment('{{ record['Team ID'] }}', 'player2', 'Yes')">P2: Yes</button>
-                            <button class="update-btn btn-no" onclick="updatePayment('{{ record['Team ID'] }}', 'player2', 'No')">P2: No</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
 
             <script>
                 function updatePayment(teamId, player, status) {
@@ -313,21 +471,96 @@ def teacher_login():
     <head>
         <title>Teacher Login</title>
         <style>
-            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f5f5f5; }
-            .login-container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-            input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
-            button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-            button:hover { background-color: #0056b3; }
-            .error { color: red; margin-top: 10px; }
-            h2 { text-align: center; color: #333; }
+            body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                height: 100vh; 
+                margin: 0; 
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                color: white;
+            }
+            .login-container { 
+                background: rgba(255, 255, 255, 0.95); 
+                padding: 50px; 
+                border-radius: 20px; 
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                min-width: 350px;
+                text-align: center;
+            }
+            h2 { 
+                color: #1e3c72; 
+                margin-bottom: 30px;
+                font-size: 2rem;
+                font-weight: 600;
+            }
+            .login-icon {
+                font-size: 4rem;
+                color: #1e3c72;
+                margin-bottom: 20px;
+            }
+            input[type="password"] { 
+                width: 100%; 
+                padding: 15px; 
+                margin: 15px 0; 
+                border: 2px solid #e3f2fd; 
+                border-radius: 10px; 
+                font-size: 16px;
+                background: white;
+                color: #1e3c72;
+                transition: all 0.3s ease;
+                box-sizing: border-box;
+            }
+            input[type="password"]:focus {
+                outline: none;
+                border-color: #2a5298;
+                box-shadow: 0 0 10px rgba(42, 82, 152, 0.3);
+            }
+            button { 
+                width: 100%; 
+                padding: 15px; 
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
+                color: white; 
+                border: none; 
+                border-radius: 10px; 
+                cursor: pointer; 
+                font-size: 16px;
+                font-weight: bold;
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            button:hover { 
+                background: linear-gradient(135deg, #0d47a1 0%, #1e3c72 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            }
+            .error { 
+                color: #f44336; 
+                margin-top: 15px; 
+                padding: 10px;
+                background: rgba(244, 67, 54, 0.1);
+                border-radius: 5px;
+                border: 1px solid rgba(244, 67, 54, 0.3);
+            }
+            .subtitle {
+                color: #666;
+                margin-bottom: 30px;
+                font-style: italic;
+            }
         </style>
     </head>
     <body>
         <div class="login-container">
-            <h2>Teacher Dashboard Login</h2>
+            <div class="login-icon">🎮</div>
+            <h2>Teacher Dashboard</h2>
+            <p class="subtitle">Tournament Management Portal</p>
             <form method="POST">
                 <input type="password" name="password" placeholder="Enter teacher password" required>
-                <button type="submit">Login</button>
+                <button type="submit">Access Dashboard</button>
                 {% if error %}
                 <div class="error">{{ error }}</div>
                 {% endif %}
