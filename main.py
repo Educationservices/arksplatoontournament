@@ -17,23 +17,26 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 def get_google_sheet():
     """Initialize and return the Google Sheet"""
     try:
-        # Load credentials from environment variable or file
+        import gspread
+        from google.oauth2.service_account import Credentials
+
+        # Load credentials
+        creds_dict = None
         if os.getenv('GOOGLE_CREDENTIALS'):
-            # For deployment (Render, Heroku, etc.)
             creds_dict = json.loads(os.getenv('GOOGLE_CREDENTIALS'))
-            creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         else:
-            # For local development
-            creds = Credentials.from_service_account_file('credentials.json', scopes=SCOPES)
-        
+            with open('credentials.json', 'r') as f:
+                creds_dict = json.load(f)
+
+        creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         client = gspread.authorize(creds)
-        
-        # Open the spreadsheet (replace with your sheet ID)
-        sheet_id = os.getenv('GOOGLE_SHEET_ID', 'YOUR_SHEET_ID_HERE')
+
+        # Access the sheet
+        sheet_id = os.getenv('GOOGLE_SHEET_ID')
         sheet = client.open_by_key(sheet_id).sheet1
-        
-        # Create headers if sheet is empty
-        if not sheet.get_all_records():
+
+        # Optional: create headers if sheet is empty
+        if sheet.row_count == 0 or not sheet.get_all_records():
             headers = [
                 'Timestamp',
                 'Player 1 Name',
@@ -47,11 +50,13 @@ def get_google_sheet():
                 'Team ID'
             ]
             sheet.append_row(headers)
-        
+
         return sheet
+
     except Exception as e:
-        print(f"Error connecting to Google Sheets: {e}")
+        print(f"[Google Sheets Error] {e}")
         return None
+
 
 def require_teacher_auth(f):
     """Decorator to require teacher authentication"""
