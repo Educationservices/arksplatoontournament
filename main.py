@@ -8,8 +8,20 @@ from datetime import datetime
 from functools import wraps
 
 app = Flask(__name__)
-CORS(app)  # Allow cross-origin requests
-app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-change-this')  # Set a secret key for sessions
+# Configure CORS more specifically
+CORS(app, resources={
+    r"/submit-registration": {
+        "origins": "*",
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    },
+    r"/teacher/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
+app.secret_key = os.getenv('SECRET_KEY', 'k')
 
 # Google Sheets setup
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
